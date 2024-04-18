@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +35,87 @@ class MyHomePage extends StatelessWidget {
     var screenHeight = MediaQuery.of(context).size.height;
     var screenWidth = MediaQuery.of(context).size.width;
 
+    Future<List<Widget>> createList() async {
+      List<Widget> items = [];
+      String dataString =
+          await DefaultAssetBundle.of(context).loadString("assets/data.json");
+      List<dynamic> dataJSON = jsonDecode(dataString);
+
+      for (var element in dataJSON) {
+        String finalString = "";
+        List<dynamic> dataList = element['placeItems'];
+
+        for (var item in dataList) {
+          finalString = '${finalString + item} | ';
+        }
+
+        items.add(Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: Container(
+            decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      spreadRadius: 2.0,
+                      blurRadius: 5.0),
+                ]),
+            margin: const EdgeInsets.all(5.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(10.0),
+                      bottomLeft: Radius.circular(10.0)),
+                  child: Image.asset(
+                    element['placeImage'],
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        element['placeName'],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
+                        child: Text(
+                          finalString,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black54,
+                          ),
+                          maxLines: 1,
+                        ),
+                      ),
+                      Text(
+                        'Min. Order: ${element["minOrder"]}',
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
+      }
+
+      return items;
+    }
+
     return Scaffold(
       body: SizedBox(
         height: screenHeight,
@@ -58,10 +141,36 @@ class MyHomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const BannerWidgetArea()
+                const BannerWidgetArea(),
+                Container(
+                  child: FutureBuilder(
+                      initialData: const <Widget>[Text('')],
+                      future: createList(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ListView(
+                                primary: false,
+                                shrinkWrap: true,
+                                children: snapshot.data!),
+                          );
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
+                      }),
+                )
               ],
             ),
           ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Colors.black,
+        child: Icon(
+          MdiIcons.food,
+          color: Colors.white,
         ),
       ),
     );
